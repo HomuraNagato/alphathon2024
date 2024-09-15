@@ -1,0 +1,11 @@
+services:
+  alphathon:
+    build:
+      dockerfile: Dockerfile
+    container_name: alphathon
+    hostname: alphathon
+    volumes:
+      - .:/workspace
+    stdin_open: true
+    tty: true
+    restart: on-failure

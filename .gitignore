@@ -3,4 +3,5 @@ data
 mooncake/.vscode
 mooncake/.idea
 mooncake/__pycache__
+.vscode
 *~
