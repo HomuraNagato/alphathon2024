@@ -5,3 +5,5 @@ mooncake/.idea
 mooncake/__pycache__
 .vscode
 *~
+*.sas7bdat
+*.txt
