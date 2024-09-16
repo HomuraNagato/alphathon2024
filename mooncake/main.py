@@ -1,25 +1,23 @@
-# region imports
+
 from AlgorithmImports import *
 import pandas as pd
 import os
-# endregion
+
+from sas_custom_data import SaSData
 
 class UpgradedRedDolphin(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2020, 3, 12)
+        #self.set_start_date(2020, 3, 12)
+        self.set_start_date(2021, 1, 1)
+        self.set_end_date(2022, 1, 1)
         self.set_cash(100000)
-        self.add_equity("SPY", Resolution.MINUTE)
-        self.add_equity("BND", Resolution.MINUTE)
-        self.add_equity("AAPL", Resolution.MINUTE)
-        self.add_equity("NVDA", Resolution.DAILY)
-
+        self.symbols = []
         # To store SPY data
-        spy_symbol = self.add_equity("SPY", Resolution.Minute).Symbol
-        self.spy_data = []
+        #spy_symbol = self.add_equity("SPY", Resolution.Minute).Symbol
 
-        nvda_symbol = self.add_equity("NVDA").symbol
-        df = self.history(nvda_symbol, 360, Resolution.DAILY)
+        #nvda_symbol = self.add_equity("NVDA").symbol
+        #df = self.history(nvda_symbol, 360, Resolution.DAILY)
         # file_path = self.object_store.get_file_path("df_to_csv")
         # df.to_csv(file_path)   # File size: 32721 bytes
         # pd_df = pd.DataFrame(df)
@@ -27,7 +25,7 @@ class UpgradedRedDolphin(QCAlgorithm):
 
         # save to local project
         # Define the file path within the project folder
-        file_path = os.path.join(os.getcwd(), "df_to_csv.csv")
+        #file_path = os.path.join(os.getcwd(), "df_to_csv.csv")
         # file_path = os.path.join(project_directory, "df_to_csv.csv")
 
         # Save the DataFrame to the CSV file in the project folder
@@ -36,14 +34,45 @@ class UpgradedRedDolphin(QCAlgorithm):
         # df.to_csv("/data/data.csv")
         # df.to_csv("/mnf/data/data.csv")
 
+        symbol_list = self.open_symbol_list()
+        #symbol_list = ["NVDA", "AAPL", "COST"]  # for prototyping
+        self.init_symbols = symbol_list.copy()
 
+        for symbol in symbol_list:
+            tmp = self.add_data(SaSData, symbol, Resolution.DAILY).symbol
+            self.symbols.append(tmp)
+        
+            history = self.history(SaSData, symbol, 1000, Resolution.DAILY)
+            self.debug(f"We have {len(history)} items from historical data request of {symbol}")
+
+        self.portfolio_size = min(len(self.symbols), 500)  # sp500list ~ 1400 stocks
+
+        self.log(f"we have a total of {len(self.symbols)} symbols in our S&P 500 universe")
+        # TODO, on_data init portfolio needs to wait for warm_up to finish?
+        #self.set_warm_up(1000)
+
+    def open_symbol_list(self):
+        fname_symbols = os.path.join(Globals.DataFolder, "sp500_symbols", "symbol_list" + ".txt")
+        f = open(fname_symbols)
+        symbols = [ line.strip() for line in f ]
+        f.close()
+        self.log(f"{len(symbols)}  symbols added to symbol list")
+        return symbols
 
     def on_data(self, data: Slice):
-        if not self.portfolio.invested:
-            self.set_holdings("SPY", 0.33)
-            self.set_holdings("BND", 0.33)
-            self.set_holdings("AAPL", 0.33)
-        
+        # add symbols on first appearance
+        seen = set()
+        for symbol in self.init_symbols:
+            if data.contains_key(symbol):
+                weight = round(1/self.portfolio_size, 3)
+                self.log(f"purchasing {symbol} with weight {weight}")
+                self.set_holdings(symbol, weight)
+                seen.add(symbol)
+
+        # remove symbols that have been added in this timeslice
+        self.init_symbols = list(set(self.init_symbols) - seen)
+        self.log(f"invested? {self.portfolio.invested}")
+
         # spy = self.add_equity("SPY").symbol
         # df = self.history(self.securities.keys, 360, Resolution.DAILY)
         # file_path = self.object_store.get_file_path("df_to_csv")
