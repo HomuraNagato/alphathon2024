@@ -1,4 +1,6 @@
+
 services:
+
   alphathon:
     build:
       dockerfile: Dockerfile
@@ -9,3 +11,24 @@ services:
     stdin_open: true
     tty: true
     restart: on-failure
+
+  ft-cls:
+    image: python:3
+    container_name: ft-cls
+    hostname: ft-cls
+    stdin_open: true
+    tty: true
+    build:
+      context: ./mooncake/llm
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/home
+      - ft-cls-vol:/var/lib/fl-cls_volume
+    environment:
+      - OPENAI_API_KEY=sk-proj-Wn6MrF2bUhfKnvLM6oQdT3BlbkFJbsw1twfuxHx91BP5J03g
+      - REL_DIR=./mooncake/llm
+
+volumes:
+  ft-cls-vol:
+    name: ft-cls-volume
+    

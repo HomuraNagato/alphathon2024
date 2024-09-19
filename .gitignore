@@ -1,11 +1,14 @@
 
-lean.json
 .vscode
-data
-__pycache__
-mooncake/.vscode
-mooncake/.idea
-mooncake/sp500list
-mooncake/backtests
-mooncake/config.json
+lean.json
 *~
+
+__pycache__
+data
+
+/mooncake/config.json
+
+/mooncake/.idea
+/mooncake/backtests
+/mooncake/sp500list
+

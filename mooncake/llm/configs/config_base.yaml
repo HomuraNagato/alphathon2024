@@ -1,0 +1,22 @@
+
+client: None
+
+prompt_template: 'Classify the term ''{}'' into one of these categories: {}; only
+    give name of the class'
+
+system_msgs:
+  classification: 'Ensure that the generated output aligns with one of the
+  predefined categories provided. Avoid generating content that does not belong
+  to any of these specified categories.'
+
+# columns are lowercased and spaces are replaced with underscores
+column_map:
+  product_real: true_category
+
+categories: []
+
+model_v000:
+  model_type: gpt-4o-mini-2024-07-18
+  temperature: 0.7
+  top_p: 1
+  max_tokens: 100

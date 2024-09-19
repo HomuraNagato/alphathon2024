@@ -13,51 +13,44 @@ class UpgradedRedDolphin(QCAlgorithm):
         self.set_end_date(2022, 1, 1)
         self.set_cash(100000)
         self.symbols = []
-        # To store SPY data
-        #spy_symbol = self.add_equity("SPY", Resolution.Minute).Symbol
 
-        #nvda_symbol = self.add_equity("NVDA").symbol
-        #df = self.history(nvda_symbol, 360, Resolution.DAILY)
-        # file_path = self.object_store.get_file_path("df_to_csv")
-        # df.to_csv(file_path)   # File size: 32721 bytes
-        # pd_df = pd.DataFrame(df)
-        # pd_df.to_csv("data.csv")
+        #sp500_symbol_list = self.open_symbol_list("sp500_symbols")
+        ten_ks_symbol_list = self.open_symbol_list("10ks")
+        sp500_symbol_list = ["NVDA", "AAPL", "COST"]  # for prototyping
+        self.init_symbols = sp500_symbol_list.copy()
 
-        # save to local project
-        # Define the file path within the project folder
-        #file_path = os.path.join(os.getcwd(), "df_to_csv.csv")
-        # file_path = os.path.join(project_directory, "df_to_csv.csv")
-
-        # Save the DataFrame to the CSV file in the project folder
-        # df.to_csv(file_path)
-        # df.to_csv("data.csv")
-        # df.to_csv("/data/data.csv")
-        # df.to_csv("/mnf/data/data.csv")
-
-        symbol_list = self.open_symbol_list()
-        #symbol_list = ["NVDA", "AAPL", "COST"]  # for prototyping
-        self.init_symbols = symbol_list.copy()
-
-        for symbol in symbol_list:
+        for symbol in sp500_symbol_list:
             tmp = self.add_data(SaSData, symbol, Resolution.DAILY).symbol
             self.symbols.append(tmp)
         
             history = self.history(SaSData, symbol, 1000, Resolution.DAILY)
-            self.debug(f"We have {len(history)} items from historical data request of {symbol}")
+            self.debug(f"sp500: We have {len(history)} items from historical data request of {symbol}")
 
+        self.add_symbols(sp500_symbol_list, "sp500", SaSData)
+        self.add_symbols(ten_ks_symbol_list, "10ks", TenKData)
+        # list(set(self.symbols)) ?
+            
         self.portfolio_size = min(len(self.symbols), 500)  # sp500list ~ 1400 stocks
 
         self.log(f"we have a total of {len(self.symbols)} symbols in our S&P 500 universe")
         # TODO, on_data init portfolio needs to wait for warm_up to finish?
         #self.set_warm_up(1000)
 
-    def open_symbol_list(self):
-        fname_symbols = os.path.join(Globals.DataFolder, "sp500_symbols", "symbol_list" + ".txt")
+    def open_symbol_list(self, pdir):
+        fname_symbols = os.path.join(Globals.DataFolder, pdir, "symbol_list" + ".txt")
         f = open(fname_symbols)
         symbols = [ line.strip() for line in f ]
         f.close()
         self.log(f"{len(symbols)}  symbols added to symbol list")
         return symbols
+
+    def add_symbols(self, symbol_list, name, custom_loader):
+        for symbol in symbol_list:
+            tmp = self.add_data(custom_loader, symbol, Resolution.DAILY).symbol
+            self.symbols.append(tmp)
+        
+            history = self.history(custom_loader, symbol, 1000, Resolution.DAILY)
+            self.debug(f"10ks: We have {len(history)} items from historical data request of {symbol}")
 
     def on_data(self, data: Slice):
         # add symbols on first appearance
