@@ -3,11 +3,12 @@ import re
 import pandas as pd
 import pyreadstat
 from datetime import datetime, timedelta
+from utils.utilities import item_search, convert_sas_date, convert_10ks_date, clean_and_split_text, count_keywords, find_max_keyword_sequence
 
 # ------------------------------------------------
 # Read in S&P500 data
 # ------------------------------------------------
-sp500_file = 'mooncake/sp500/sp500cik.sas7bdat'
+sp500_file = 'sp500/sp500cik.sas7bdat'
 # Read the .sas7bdat file into a Pandas DataFrame
 sp500, meta = pyreadstat.read_sas7bdat(sp500_file)
 
@@ -27,7 +28,7 @@ def extract_text_from_10ks(filename: str) -> pd.DataFrame:
     date_match = re.search(r'FILED AS OF DATE:\s+(\d{8})', content)
     date = date_match.group(1) if date_match else 'Unknown'
     item_1A = item_search("ITEM 1A(.*?)ITEM 1B", content)
-    # item_1A
+    item_1A
     item_1B = item_search("ITEM 1B(.*?)ITEM 2", content)
     # item_1B
     item_2 = item_search("ITEM 2(.*?)ITEM 3", content)
@@ -78,16 +79,8 @@ def extract_text_from_10ks(filename: str) -> pd.DataFrame:
     }
     return pd.DataFrame(data)
 
-"""
-Helper function to search for and extract text using regular expressions
-"""
-def item_search(text: str, content: str) -> str:
-    item_match = re.search(f"{text}", content, flags=re.DOTALL)
-    item = item_match.group(1).strip() if item_match else 'No text available'
-    return item
-
 # Define the filename
-# filename = 'mooncake/10Ks/2023/QTR1/20230103_10-K_edgar_data_1487931_0001477932-23-000012.txt'
+filename = '10Ks/2023/QTR1/20230103_10-K_edgar_data_1487931_0001477932-23-000012.txt'
 # df = extract_text_from_10ks(filename)
 # df.iloc[:,3:5]
 
@@ -103,7 +96,7 @@ def item_search(text: str, content: str) -> str:
 quarters = ["QTR1", "QTR2", "QTR3", "QTR4"]
 all_files = []
 for quarter in quarters:
-    quarter_files = os.listdir(f"mooncake/10Ks/2023/{quarter}")
+    quarter_files = os.listdir(f"10Ks/2023/{quarter}")
     # Filter the files to include only those that contain "10-K_edgar"
     files_10ks = [file for file in quarter_files if "10-K_edgar" in file]
     all_files.append(files_10ks)
@@ -120,7 +113,7 @@ for files in all_files: # loop through each quarter
         if j % int(files_count/10) == 0:
             print(f"We are {j // int(files_count/10)}0% through")
         quarter = quarters[i]
-        this_file_path = f"mooncake/10Ks/2023/{quarter}/{file}"
+        this_file_path = f"10Ks/2023/{quarter}/{file}"
         # print("filename is: ", this_file_path)
         this_df = extract_text_from_10ks(this_file_path)
         df_10ks = pd.concat([df_10ks, this_df], ignore_index=True)
@@ -132,21 +125,8 @@ df_10ks.tail()
 # type(df_10ks['cik'][0])
 
 # ------------------------------------------------
-# Align date columns in preparation of merge
+# Align dates
 # ------------------------------------------------
-def convert_sas_date(serial_date: float, date_format: str) -> str:
-    # Excel origin date
-    excel_origin = datetime(1960, 1, 1)
-    # Calculate the date by adding the number of days to the origin
-    target_date = excel_origin + timedelta(days=int(serial_date))
-    # Format the date based on the given format
-    return target_date.strftime(date_format)
-
-def convert_10ks_date(date: str, date_format: str) -> str:
-    # Parse the date string into a datetime object assuming the format is 'YYYYMMDD'
-    parsed_date = datetime.strptime(date, '%Y%m%d')
-    # Return the formatted date string as 'YYYY-MM-DD'
-    return parsed_date.strftime(date_format)
 
 sp500["date"] = sp500['DATE'].apply(lambda x: convert_sas_date(x, '%Y-%m-%d'))
 sp500["ym"] = sp500['DATE'].apply(lambda x: convert_sas_date(x, '%Y-%m'))
@@ -184,9 +164,9 @@ df_10ks3 = df_10ks2[df_10ks2['ticker'].notna()]
 # sp500.query("cik == '0001771225'")
 # sp500.query("cik == '0001789029'")
 
-df_10ks3.to_csv("mooncake/10Ks/df_10ks.csv")
+df_10ks3.to_csv("10Ks/df_10ks.csv")
 
-df_10ks3 = pd.read_csv("mooncake/10Ks/df_10ks.csv", dtype={"cik": str})
+df_10ks3 = pd.read_csv("10Ks/df_10ks.csv", dtype={"cik": str})
 df_10ks3.head()
 
 # ------------------------------------------------
@@ -200,43 +180,6 @@ keywords = ["risk", "financial", "performance", "dividend", "buyback", "operatio
 sequence_length = 5
 item_cols = [col for col in df_10ks3.columns if "item" in col]
 
-"""
-Split the text into an array
-"""
-def clean_and_split_text(text: str):
-    # Remove 'Table of Contents' and any preceding numbers
-    cleaned_text = re.sub(r"\d+\s*\nTable of Contents\s*\n", "", text)
-    # Remove company name in capital letters (assumed to be a line of uppercase words)
-    cleaned_text = re.sub(r"^[A-Z\s]+\n", "\n", cleaned_text, flags=re.MULTILINE)
-    # Split text into paragraphs
-    paragraphs = cleaned_text.split('\n\n')
-    # Filter out empty paragraphs
-    paragraphs = [para.strip() for para in paragraphs if para.strip() != '']
-    return paragraphs
-
-"""
-Count occurrences of keywords in each text.
-"""
-def count_keywords(texts: list, keywords: list) -> list:
-    keyword_counts = []
-    for text in texts:
-        count = sum(text.lower().count(keyword.lower()) for keyword in keywords)
-        keyword_counts.append(count)
-    return keyword_counts
-
-"""
-Identify the sequence of texts that have the maximum count of keywords.
-"""
-def find_max_keyword_sequence(keyword_counts: list, sequence_length: int = 2):
-    max_sum = 0
-    start_index = 0
-    for i in range(len(keyword_counts) - sequence_length + 1):
-        current_sum = sum(keyword_counts[i:i + sequence_length])
-        if current_sum > max_sum:
-            max_sum = current_sum
-            start_index = i
-    return start_index
-
 # test it out
 text_list = clean_and_split_text(df_10ks3[['item_1A']].iloc[3,:][0])
 text_list_test = ["there is one risk facter here", "there are two important risk factors here", "and two important risk factors here", "nothing here"]
@@ -249,12 +192,12 @@ text_list_test[start_index:start_index+2]
 # and apply to all columns
 # for items columns
 df_10ks3_clone = df_10ks3.copy()
-df_10ks3 = df_10ks3_clone.copy()
+# df_10ks3 = df_10ks3_clone.copy()
 df_10ks3.reset_index(inplace=True)
 n = len(df_10ks3)
 for item in item_cols:
     print("item is", item)
-    for i in range(10):
+    for i in range(n):
         this_item_text = df_10ks3.at[i, item]
         if len(this_item_text[0:50]) >= 50:
             print(f"row {i} will be processed")
@@ -263,12 +206,13 @@ for item in item_cols:
             start_index = find_max_keyword_sequence(text_counts, sequence_length)
             best_item_texts = text_list[start_index:start_index+sequence_length]
         else:
-            best_item_text = ""
+            best_item_texts = ""
         df_10ks3.at[i, item] = ". \n ".join(best_item_texts)
     
-len(df_10ks3['item_1A'][44])
-# reduced df_10ks3_clone['item_1A'][44] from 133546 to 15789 characters
+len(df_10ks3_clone['item_1A'][44])
+len(df_10ks3['item_1A'][3])
+# reduced df_10ks3_clone['item_1A'][44] from 133555 to 10805 characters (l2) 20733 characters (l5)
 # can also include a value of the decrease in file size in terms of megabytes
 
 df_10ks4 = df_10ks3.copy()
-df_10ks4.to_csv("mooncake/10Ks/df_10ks_l5_cleaned.csv")
+df_10ks4.to_csv("10Ks/df_10ks_l5_cleaned.csv")
