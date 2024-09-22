@@ -42,7 +42,7 @@
             
             - gsubind: GIC Sub-Industries
 
-**newly added on 22Sep**
+**newly added variables on 22Sep**
 
             - BIDLO: lowest trading price during the day, or the closing bid price on days when the closing price is not available.
 
