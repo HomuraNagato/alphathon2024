@@ -50,8 +50,8 @@
 
             - OPENPRC: the first trading price after market opens
 
-            - PRC_Adj:
+            - PRC_Adj: adjusted prices for corporate events such as share splits
 
-            - SHROUT_Adj:
+            - SHROUT_Adj: adjusted shares outstanding for corporate events such as share splits
 
-            - mktcap:
+            - mktcap: market capitalization = mktcap = abs(prc)*shrout
