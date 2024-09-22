@@ -46,4 +46,12 @@
 
             - BIDLO: lowest trading price during the day, or the closing bid price on days when the closing price is not available.
 
-            - 
+            - ASKHI: highest trading price during the day, or the closing ask price on days when the closing price is not available.
+
+            - OPENPRC: the first trading price after market opens
+
+            - PRC_Adj:
+
+            - SHROUT_Adj:
+
+            - mktcap:
