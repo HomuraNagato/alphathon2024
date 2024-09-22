@@ -54,4 +54,6 @@
 
             - SHROUT_Adj (= SHROUT * CFACSHR): adjusted shares outstanding for corporate events such as share splits 
 
+            - OPENPRC_Adj (= OPENPRC / CFACPR): adjusted open prices for corporate events such as share splits 
+
             - mktcap (= abs(prc)*shrout): market capitalization 
