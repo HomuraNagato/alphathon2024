@@ -2,6 +2,8 @@
 
 **updated** 15Sep2014 -- with CIK indicator: https://www.dropbox.com/scl/fi/vn01g2uboew3nemgelxie/sp500cik.sas7bdat?rlkey=nxi030m7rzk72x57hoz7tfqv2&dl=0
 
+**updated** 22Sep2024 -- with *adjusted* price & *adjusted* shares outstanding & market capitalization: https://www.dropbox.com/scl/fi/hpnf7gk1p77m9icyoqiei/sp500cik.sas7bdat?rlkey=5ngtjlfaj1ui83byl0a4jyhcy&dl=0
+
             variable description:
             
             - DATE: Date of Observation, in format of YYYYMMDD
