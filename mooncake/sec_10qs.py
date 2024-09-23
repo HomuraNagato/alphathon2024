@@ -30,26 +30,7 @@ def extract_text_from_10qs(filename: str) -> pd.DataFrame:
     # Extract the date (Filed as of date)
     date_match = re.search(r'FILED AS OF DATE:\s+(\d{8})', content)
     date = date_match.group(1) if date_match else 'Unknown'
-    item_1A = item_search("(ITEM 1A|Item 1A|ITEM 1|Item 1\.)(.*?)(ITEM 1B|2 Unregistered|2. Unregistered)", content)
-    # item_1A
-    item_2 = item_search("(ITEM 1B|2 Unregistered|2. Unregistered)(.*?)(ITEM 3|3 Defaults|3. Defaults)", content)
-    # item_2
-    item_3 = item_search("(ITEM 3|3 Defaults|3. Defaults)(.*?)(ITEM 4|4 Mine|4. Mine)", content)
-    # item_3
-    item_4 = item_search("(ITEM 4|4 Mine|4. Mine)(.*?)(ITEM 5|5 Other|5. Other)", content)
-    # item_4
-    item_5 = item_search("(ITEM 5|5 Other|5. Other)(.*?)(ITEM 6|6 Exhibits|6. Exhibits)", content)
-    # item_5
-    data = {
-        'cik': [cik],
-        'company_name': [company_name],
-        'date': [date],
-        'item_1A': [item_1A],
-        'item_2': [item_2],
-        'item_3': [item_3],
-        'item_4': [item_4],
-        'item_5': [item_5]
-    }
+    
     return pd.DataFrame(data)
 
 quarters = ["QTR1", "QTR2", "QTR3", "QTR4"]
