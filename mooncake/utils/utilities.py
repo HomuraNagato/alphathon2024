@@ -121,7 +121,7 @@ Split the text into an array
 def clean_and_split_text(text: str):
     # Remove 'Table of Contents' and any preceding numbers
     text = re.sub(r"^[A-Z\s]+\n", "\n", text, flags=re.MULTILINE)
-    paragraphs = text.split("Table of Contents") # sometimes Table is split in to Table or Ta ble
+    paragraphs = text.split("ble of Content") # sometimes Table is split in to Table or Ta ble
     if len(paragraphs) < 2:
     # cleaned_text = re.sub(r"\d+\s*\nTable of Contents\s*\n", "", text)
     # Remove company name in capital letters (assumed to be a line of uppercase words)
@@ -162,4 +162,6 @@ def clean_text(item: str, keywords: list, sequence_length: int = 2):
     start_index = find_max_keyword_sequence(text_counts, sequence_length)
     best_item_texts = text_list[start_index:start_index+sequence_length]
     item_cleaned = ". \n ".join(best_item_texts)
+    item_cleaned = re.sub(r's \n\n', '', item_cleaned)
+    item_cleaned = re.sub(r'\n\nTa', '', item_cleaned)
     return item_cleaned

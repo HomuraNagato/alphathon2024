@@ -24,7 +24,7 @@ def process_forms(form_style: str, year: str):
     sp500_ciks = sp500[['cik']].drop_duplicates(ignore_index=True)
     # Define the filename
     # file_name = '10Ks/2023/QTR1/20230103_10-K_edgar_data_1487931_0001477932-23-000012.txt'
-    file_name = '10Ks/2023/QTR1/20230130_10-K_edgar_data_1035443_0001035443-23-000099.txt'
+    file_name = '10Ks/2023/QTR1/20230217_10-K_edgar_data_922224_0000922224-23-000010.txt'
     # df = extract_text_from_10ks(filename)
     # df.iloc[:,3:5]
     # df.to_csv("mooncake/10Ks/example_items.csv")
@@ -144,7 +144,20 @@ def process_forms(form_style: str, year: str):
     print(f"Form-{form_style}-{year} finished processing")
     return 0
 
-years = [str(year) for year in range(2001, 2023)]
+years = [str(year) for year in range(2001, 2024)]
 # for year in years:
-year = "2001"
+year = "2023"
 process_forms(form_style = "10-K", year = year)
+
+all_df = pd.DataFrame()
+for year in years:
+    print("year", year)
+    this_df = pd.read_csv(f"10Ks/form-10-K-{year}.csv", dtype={'cik': str}, index_col=0)
+    all_df = pd.concat([all_df, this_df], ignore_index=True)
+
+all_df.reset_index(drop=True, inplace=True)
+all_df.to_csv(f"10Ks/form-10-K-all.csv")
+
+"""
+put form-10-K-2023.csv
+"""
