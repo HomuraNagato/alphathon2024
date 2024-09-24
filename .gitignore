@@ -1,14 +1,13 @@
 
 .vscode
 lean.json
+*.sas7bdat
+*.txt
 *~
+/mooncake/config.json
 
 __pycache__
 data
-
-/mooncake/config.json
-
 /mooncake/.idea
 /mooncake/backtests
 /mooncake/sp500list
-

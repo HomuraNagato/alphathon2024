@@ -2,7 +2,6 @@
 import pyreadstat
 import pandas as pd
 
-# Define the input .sas7bdat file and output .csv file
 
 def read_sas_pyreadstat(fname):
     # Read the .sas7bdat file into a Pandas DataFrame

@@ -1,5 +1,7 @@
 
 from AlgorithmImports import *
+from datetime import date
+from io import StringIO
 import pandas as pd
 import os
 
@@ -9,9 +11,10 @@ from llm.utils.utilities import create_path, inspect_df, _open
 from llm.utils.yaml_editor import Checkpoint
 
 
-class UpgradedRedDolphin(QCAlgorithm):
+class MoonCake(QCAlgorithm):
 
     def initialize(self):
+
         self.set_start_date(2010, 1, 1)
         self.set_end_date(2012, 1, 1)
         self.set_cash(100000)
@@ -25,6 +28,9 @@ class UpgradedRedDolphin(QCAlgorithm):
         #symbol_list = list(set(sp500_symbol_list) | set(ten_ks_symbol_list))
         symbol_list = ["NVDA", "AAPL", "COST", "SBUX"]  # for prototyping
         self.init_symbols = symbol_list.copy()
+        self.add_equity("SPY", Resolution.DAILY)
+        self.add_equity("AAPL", Resolution.DAILY)
+        self.add_equity("NVDA", Resolution.DAILY)
 
         self.add_symbols(symbol_list, "sp500", SaSData)
         #self.add_symbols(symbol_list, "10ks", TenKData)
@@ -34,6 +40,15 @@ class UpgradedRedDolphin(QCAlgorithm):
         self.log(f"we have a total of {len(self.symbols)} symbols in our S&P 500 universe")
         # TODO, on_data init portfolio needs to wait for warm_up to finish?
         #self.set_warm_up(1000)
+
+        # self.portfolio_weights = pd.read_csv("portfolio_weights.csv")
+        weights_string = self.object_store.read("mooncake/portfolio_weights.csv")
+        weights_string = StringIO(weights_string)
+        self.portfolio_weights = pd.read_csv(weights_string)
+
+        # self.schedule.on(self.date_rules.month_start("SPY"),
+        #                  self.time_rules.after_market_open("SPY"),
+        #                  self.rebalance_portfolio)
 
     def open_symbol_list(self, pdir):
         fname_symbols = os.path.join(Globals.DataFolder, pdir, "symbol_list" + ".txt")
@@ -87,6 +102,19 @@ class UpgradedRedDolphin(QCAlgorithm):
         for row in records:
             self.log(f"llm recommendation for {row['ticker']} is to {row['openai_response']}")
 
+        # Schedule rebalancing based on dates in the dataframe
+        # for index, row in self.portfolio_weights.iterrows():
+        self.today = self.Time
+        # self.Debug("today year is: " + str(self.today.year) + " & month: " + str(self.today.month))
+        # self.Debug("and the date is: " + str(date(self.today.year, self.today.month, 1)))
+        if self.first_trading_day_of_month(self.today):
+            self.Debug("today is the first trading day of the month: " + str(self.today))
+            # rebalance the portfolio on these days
+            self.schedule.on(
+                self.date_rules.month_start("SPY"),
+                self.time_rules.after_market_open("SPY"),
+                self.rebalance_portfolio
+            )
         # spy = self.add_equity("SPY").symbol
         # df = self.history(self.securities.keys, 360, Resolution.DAILY)
         # file_path = self.object_store.get_file_path("df_to_csv")
@@ -121,14 +149,35 @@ class UpgradedRedDolphin(QCAlgorithm):
         chkpnt.remove()
 
         return records
-    
-    # def on_end_of_algorithm(self):
-    #     # Convert the list of SPY data to a Pandas DataFrame
-    #     df = pd.DataFrame(self.spy_data, columns=["Time", "SPY_Close_Price"])
 
-    #     # Save the DataFrame as a CSV file
-    #     df.to_csv("/data/SPY_data.csv", index=False)
+    def first_trading_day_of_month(self, today: str) -> bool: 
+        first_day_of_current_month = date(today.year, today.month, 1)
+        today = today.strftime('%Y-%m-%d')
+        trading_days = self.TradingCalendar.GetTradingDays(first_day_of_current_month, self.EndDate) 
+        first_trading_day = next(day for index, day in enumerate(trading_days) if day.BusinessDay) 
+        first_trading_day = first_trading_day.Date.date().strftime('%Y-%m-%d')
+        self.Debug("Comparing " + str(today) + " to " + str(first_trading_day)) 
+        # Compare datetime.date objects 
+        return today == first_trading_day
 
-    #     # Output a message in the log
-    #     self.debug("SPY data has been saved as CSV.")
+    # def rebalance_portfolio(self):
+    #     if self.time >= datetime(2021, 1, 1):
+    #         self.SetHoldings("AAPL", 1)
+    #         self.SetHoldings("NVDA", 0)
+
+    def rebalance_portfolio(self):
+        today = self.Time.strftime('%Y-%m-%d') # re-initialize the today variable as it can get out of sync calling self.today
+        self.Debug("rebalancing the portfolio on: " + str(today))
+        # Find the row for the current date
+        this_month_stocks = self.portfolio_weights.query('date == @today')
+        self.Debug("this month stocks are: " + str(this_month_stocks))
+
+        if len(this_month_stocks) > 0:
+            # Set holdings based on the weights
+            for index, row in this_month_stocks.iterrows():
+                self.Debug("ticker is: " + str(row["ticker"]) + " and weight is: " + str(row["weight"]))
+                # if ticker != 'date':
+                self.SetHoldings(row["ticker"], row["weight"])
+        
+
     
