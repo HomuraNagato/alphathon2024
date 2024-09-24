@@ -11,7 +11,10 @@ system_msgs:
 
 # columns are lowercased and spaces are replaced with underscores
 column_map:
-  product_real: true_category
+    item_1: item_1
+    item_1a: item_1a
+    item_7a: item_7a
+    truth: true_category
 
 categories: []
 

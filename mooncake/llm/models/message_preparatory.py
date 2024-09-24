@@ -6,17 +6,19 @@ from pathlib import Path
 import sys
 import json
 
-sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
+#sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
+sys.path.append("/home/mooncake")
 
-from constants.constants_llm import ConstantsLLM
-from models.openai_liaison import liaison_batch, liaison_finetune
-from models.text_preparatory import TextPreparatory
-from utils.utilities import create_path, inspect_df, _open
+from llm.constants.constants_llm import ConstantsLLM
+from llm.models.openai_liaison import liaison_batch, liaison_finetune
+from llm.models.text_preparatory import TextPreparatory
+from llm.utils.yaml_editor import Checkpoint
+from llm.utils.utilities import create_path, inspect_df, _open
 
 class MessageEngine:
 
-    def __init__(self, config, checkpoint_path=None):
-        self.checkpoint_path = checkpoint_path
+    def __init__(self, config, checkpoint: Checkpoint):
+        self.checkpoint = checkpoint if checkpoint else Checkpoint()
         self.cnst = ConstantsLLM()
         self.config = config
         self.text_preparatory = TextPreparatory()
@@ -28,11 +30,17 @@ class MessageEngine:
         df = df.fillna("")
         return df
 
+    def sample(self, df, sample_size):
+        if 0 < sample_size < df.shape[0]:
+            sample_idx = df.sample(n=sample_size).index
+            df = df.loc[sample_idx,:]
+        return df
+
     def solicitation_destem(self, df):
         # few steps to prep df -> list of strings for request batch
 
-        tmp_destem_req = "/tmp/llm/destem_request.jsonl"
-        tmp_destem_res = "/tmp/llm/destem_response.jsonl"
+        tmp_destem_req = Path(self.checkpoint.pdir / "destem_request.jsonl")
+        tmp_destem_res = Path(self.checkpoint.pdir / "destem_response.jsonl")
 
         # already completed
         if self.verify_checkpoint(tmp_destem_res):
@@ -51,7 +59,7 @@ class MessageEngine:
         self.save_messages(tmp_destem_req, s02)
 
         # solicitation
-        res = liaison_batch(tmp_destem_req, tmp_destem_res, self.checkpoint_path)
+        res = liaison_batch(tmp_destem_req, tmp_destem_res, self.checkpoint)
         s03 = self.text_preparatory.unwrap_message_batch(tmp_destem_res)
 
         return s03
@@ -70,9 +78,9 @@ class MessageEngine:
     def set_config(self, config):
         self.config = config
 
-    def update_df(self, df, col_name, col, save_path):
+    def update_df(self, df, col_name, col_cells, save_path=""):
 
-        df[col_name] = col
+        df[col_name] = col_cells
 
         # only save if save_path provided
         if save_path:
@@ -83,17 +91,17 @@ class MessageEngine:
         return df
 
     def verify_checkpoint(self, fpath):
-        res = False
-        if self.checkpoint_path and Path(self.checkpoint_path).exists() and Path(fpath).exists():
+        #res = self.checkpoint_dir and Path(self.checkpoint_dir).exists() and Path(fpath).exists()
+        res = Path(fpath).exists()
+        if res:
             print(f"checkpoint found for {fpath}")
-            res = True
         return res
 
 
 class MessageTrainEngine(MessageEngine):
 
-    def __init__(self, config, checkpoint_path=None):
-        MessageEngine.__init__(self, config, checkpoint_path)
+    def __init__(self, config, checkpoint: Checkpoint=None):
+        MessageEngine.__init__(self, config, checkpoint)
 
     def prep_train(self, df, message_path):
         
@@ -134,15 +142,16 @@ class MessageTrainEngine(MessageEngine):
 
 class MessageTestEngine(MessageEngine):
 
-    def __init__(self, config, checkpoint_path=None):
-        MessageEngine.__init__(self, config, checkpoint_path)
+    def __init__(self, config, checkpoint: Checkpoint=None):
+        MessageEngine.__init__(self, config, checkpoint)
+        self.path_cls_req = Path(self.checkpoint.pdir / "cls_request.jsonl")
+        self.path_cls_res = Path(self.checkpoint.pdir / "cls_response.jsonl")
 
-    def solicitation_test(self, df, model_key, path_cls_req="/tmp/llm/cls_request.jsonl", path_cls_res="/tmp/llm/cls_response.jsonl"):
+    def solicitation_test(self, df, model_key, sample_size=0):
         # messages without true category
         # note, message_json's for chat completion are different than fine-tuning
 
         # prep
-        breakpoint()
         if self.cnst.true_category in df.columns:
             d = df.drop(columns=[self.cnst.true_category]).to_dict(orient="list")
         else:
@@ -150,24 +159,23 @@ class MessageTestEngine(MessageEngine):
 
         template = "{}"
         texts = self.text_preparatory.dict_to_list(template, **d)
-        breakpoint()
 
         prompts = self.text_preparatory.generate_prompts(self.config["prompt_template"],
                                                          texts,
                                                          self.config["categories"])
 
-        if self.verify_checkpoint(path_cls_res):
-            res = self.text_preparatory.unwrap_message_batch(path_cls_res)
+        if self.path_cls_res.exists():
+            res = self.text_preparatory.unwrap_message_batch(str(self.path_cls_res))
             return prompts, res
 
         msgs = self.text_preparatory.prep_messages(system_str=self.config["system_msgs"]["classification"],
                                                    prompts=prompts)
 
         msgs_jsonl = self.text_preparatory.prep_messages_batch(msgs, self.config[model_key])
-        self.save_messages(path_cls_req, msgs_jsonl)
-
+        self.save_messages(str(self.path_cls_req), msgs_jsonl)
+        
         # solicitation
-        openai_res = liaison_batch(path_cls_req, path_cls_res, self.checkpoint_path)
-        res = self.text_preparatory.unwrap_message_batch(path_cls_res)
+        openai_res = liaison_batch(self.path_cls_req, self.path_cls_res, self.checkpoint)
+        res = self.text_preparatory.unwrap_message_batch(self.path_cls_res)
         
         return prompts, res

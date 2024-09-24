@@ -8,9 +8,9 @@ import time
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from models.openai_client import OpenAIClient
-from utils.config_editor import Checkpoint
-from utils.utilities import get_logger, _open
+from llm.models.openai_client import OpenAIClient
+from llm.utils.yaml_editor import Checkpoint
+from llm.utils.utilities import get_logger, _open
 
 class OpenAILiaison(threading.Thread, OpenAIClient):
 
@@ -124,12 +124,13 @@ class LiaisonChat(OpenAILiaison):
 
         super().run(self._run)
 
-def liaison_batch(file_path, content_path, checkpoint_path=None):
+def liaison_batch(file_path: Path, content_path: Path, checkpoint: Checkpoint):
 
     openai_client = OpenAIClient()
-    checkpoint = Checkpoint(checkpoint_path)
-    fileid = checkpoint["batch_fileid"]
-    batchid = checkpoint["batch_batchid"]
+    fileid = batchid = None
+    if checkpoint:
+        fileid = checkpoint["batch_fileid"]
+        batchid = checkpoint["batch_batchid"]
 
     if not fileid:
         response = openai_client.upload_file(file_path, purpose="batch")
@@ -147,7 +148,7 @@ def liaison_batch(file_path, content_path, checkpoint_path=None):
         checkpoint.update_key("batch_batchid", batchid)
         checkpoint.save()
 
-    lchat = LiaisonChat(batchid, content_path)
+    lchat = LiaisonChat(batchid, str(content_path))
     lchat.start()
     lchat.join()
 
@@ -157,12 +158,13 @@ def liaison_batch(file_path, content_path, checkpoint_path=None):
 
     return 0
 
-def liaison_finetune(data_path, checkpoint_path=None, model="gpt-4o-mini"):
+def liaison_finetune(data_path: Path, checkpoint: Checkpoint, model="gpt-4o-mini"):
 
     openai_client = OpenAIClient()
-    checkpoint = Checkpoint(checkpoint_path)
-    fileid = checkpoint["ft_fileid"]
-    ftid = checkpoint["ft_id"]
+    fileid = batchid = None
+    if checkpoint:
+        fileid = checkpoint["ft_fileid"]
+        ftid = checkpoint["ft_id"]
 
     if not fileid:
         response = openai_client.upload_file(data_path)
@@ -184,9 +186,10 @@ def liaison_finetune(data_path, checkpoint_path=None, model="gpt-4o-mini"):
     lfinetune.start()
     lfinetune.join()
 
-    #checkpoint.remove_key("ft_fileid")
-    #checkpoint.remove_key("ft_id")
-    #checkpoint.save()
+    # TODO, why was this commented out?
+    checkpoint.remove_key("ft_fileid")
+    checkpoint.remove_key("ft_id")
+    checkpoint.save()
 
     return lfinetune.ft_model
     

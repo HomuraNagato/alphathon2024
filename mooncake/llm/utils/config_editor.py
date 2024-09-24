@@ -6,10 +6,10 @@ import os
 import sys
 import yaml
 
-sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
+sys.path.append(os.getcwd() + "/mooncake")
 
-from utils.yaml_editor import YamlEditor, Checkpoint
-from utils.utilities import _open, get_logger
+from llm.utils.yaml_editor import YamlEditor, Checkpoint
+from llm.utils.utilities import _open, get_logger
 
 def initialise():
 
@@ -23,9 +23,9 @@ def initialise():
                        nargs="?",
                        default="senzai",
                        help="name of client")
-    parse.add_argument("--checkpoint_path",
+    parse.add_argument("--checkpoint_dir",
                        nargs="?",
-                       default="/tmp/llm/checkpoint.yaml",
+                       default="/tmp/llm",
                        help="path to yaml used to store temporary data to recover during fine-tune")
     parse.add_argument("--model_key_base",
                        nargs="?",
@@ -37,7 +37,7 @@ def initialise():
                        help="key within config to use for accessing params of model")
     parse.add_argument("--model",
                        nargs="?",
-                       default="gpt-4o-mini",
+                       default="gpt-4o-mini-2024-07-18",
                        help="corresponds to openai model; including finetuned; overrides model from base_model_key. default is gpt-3.5-turbo-1106")
     parse.add_argument("--data_path",
                        nargs="?",
@@ -71,7 +71,7 @@ class ConfigEditor(YamlEditor):
 
         if self.ydict:
             return
-        
+
         default_config = _open(self.default_config_path)
         default_config["client"] = client
         self.ydict = default_config
@@ -84,7 +84,7 @@ class ConfigEditor(YamlEditor):
 if __name__ == "__main__":
 
     args = initialise()
-    chkpnt = Checkpoint(args.checkpoint_path)
+    chkpnt = Checkpoint(args.checkpoint_dir)
 
     now = datetime.datetime.now()
     now = now.strftime('%Y-%m-%d')

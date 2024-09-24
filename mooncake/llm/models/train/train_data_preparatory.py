@@ -8,9 +8,9 @@ import sys
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from constants.constants_llm import ConstantsLLM
-from models.data_preparatory import DataEngine
-from utils.utilities import create_path, inspect_df, _open
+from llm.constants.constants_llm import ConstantsLLM
+from llm.models.data_preparatory import DataEngine
+from llm.utils.utilities import create_path, inspect_df, _open
 
 def restricted_float(x):
     try:
@@ -49,6 +49,10 @@ def initialise():
                        nargs="?",
                        type=int,
                        help="random sample of data prior to train/test split")
+    parse.add_argument("--sep",
+                       nargs="?",
+                       default=",",
+                       help="df separator")
     parse.add_argument("--split",
                        nargs="?",
                        default=0.5,
@@ -67,11 +71,12 @@ def initialise():
 
 class TrainEngine(DataEngine):
 
-    def __init__(self, config, checkpoint_path, split, sample, threshold, unique):
+    def __init__(self, config, checkpoint_path, split, sample, threshold, unique, sep=","):
         DataEngine.__init__(self, config)
         self.cnst_llm = ConstantsLLM()
         self.column_map = config["column_map"]
         self.checkpoint_path = checkpoint_path
+        self.sep = sep
         self.split = split
         self.sample = sample
         self.threshold = threshold
@@ -79,7 +84,7 @@ class TrainEngine(DataEngine):
 
     def prep_df(self, data_path):
 
-        df = pd.read_csv(data_path, low_memory=False)
+        df = pd.read_csv(data_path, low_memory=False, sep=self.sep)
         df = df.fillna('')
         df = df.map(lambda x: x.lower() if isinstance(x, str) else x)
 
@@ -93,7 +98,6 @@ class TrainEngine(DataEngine):
         #cols_include = set(self.cnst_llm.columns) - set(df.columns)
         #for col in cols_include:
         #    df[col] = ""
-
         idx_category_na = df.loc[:,self.cnst_llm.true_category] == ""
         df = df.loc[~idx_category_na,:]
 
@@ -146,11 +150,12 @@ if __name__ == "__main__":
     print(config)
 
     data_engine = TrainEngine(config,
-                             args.checkpoint_path,
-                             args.split,
-                             args.sample,
-                             args.threshold,
-                             args.unique)
+                              args.checkpoint_path,
+                              args.split,
+                              args.sample,
+                              args.threshold,
+                              args.unique,
+                              sep=args.sep)
     
     df = data_engine.prep_df(args.data_path)
     data_engine.save_train_test(args.train_path, args.test_path, df)

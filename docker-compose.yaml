@@ -19,14 +19,15 @@ services:
     stdin_open: true
     tty: true
     build:
-      context: ./mooncake/llm
-      dockerfile: Dockerfile
+      context: ./mooncake
+      dockerfile: ./llm/Dockerfile
     volumes:
       - ./:/home
       - ft-cls-vol:/var/lib/fl-cls_volume
     environment:
       - OPENAI_API_KEY=sk-proj-Wn6MrF2bUhfKnvLM6oQdT3BlbkFJbsw1twfuxHx91BP5J03g
-      - REL_DIR=./mooncake/llm
+      - REL_DIR=./mooncake
+      - LLM_DIR=./mooncake/llm
 
 volumes:
   ft-cls-vol:

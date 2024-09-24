@@ -6,9 +6,9 @@ import sys
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from constants.constants_llm import ConstantsLLM
-from models.message_preparatory import MessageTrainEngine
-from utils.utilities import _open
+from llm.constants.constants_llm import ConstantsLLM
+from llm.models.message_preparatory import MessageTrainEngine
+from llm.utils.utilities import _open
 
 def initialise():
     parse = argparse.ArgumentParser(

@@ -6,8 +6,8 @@ import sys
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from models.openai_liaison import liaison_finetune
-from utils.yaml_editor import Checkpoint
+from llm.models.openai_liaison import liaison_finetune
+from llm.utils.yaml_editor import Checkpoint
 
 def initialise():
 
@@ -32,9 +32,9 @@ def initialise():
 if __name__ == "__main__":
 
     args = initialise()
-    mediate = Checkpoint()
+    chkpnt = Checkpoint()
 
-    ft_model = liaison_finetune(args.message_path, args.checkpoint_path, args.model)
-    mediate.update_key("model", ft_model)
+    ft_model = liaison_finetune(args.message_path, chkpnt, args.model)
+    chkpnt.update_key("model", ft_model)
 
     print(ft_model)

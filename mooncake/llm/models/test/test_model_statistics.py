@@ -9,8 +9,8 @@ import yaml
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from constants.constants_llm import ConstantsLLM
-from utils.utilities import create_path
+from llm.constants.constants_llm import ConstantsLLM
+from llm.utils.utilities import create_path
 
 def initialise():
 

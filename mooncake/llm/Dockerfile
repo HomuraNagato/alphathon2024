@@ -5,7 +5,7 @@ FROM python:3
 WORKDIR /home
 
 # copy static files
-COPY requirements.txt .
+COPY llm/requirements.txt .
 
 # Install needed packages
 RUN pip install --no-cache-dir -r requirements.txt

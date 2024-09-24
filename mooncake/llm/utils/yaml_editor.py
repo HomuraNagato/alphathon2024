@@ -5,18 +5,18 @@ import os
 import sys
 import yaml
 
-sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
+sys.path.append(os.getcwd())
 
-from utils.utilities import _open, create_path, get_logger
+from llm.utils.utilities import _open, create_path, get_logger
 
 def initialise():
 
     parse = argparse.ArgumentParser(
         description="update a config with params",
         epilog="example: python yaml_editor.py --checkpoint_path /tmp/senzai_intermediary.yaml")
-    parse.add_argument("--checkpoint_path",
+    parse.add_argument("--checkpoint_dir",
                        nargs="?",
-                       default="/tmp/senzai/checkpoint.yaml",
+                       default="/tmp/llm",
                        help="path to yaml used to store temporary data to recover during fine-tune")
     args = parse.parse_args()
 
@@ -26,7 +26,7 @@ class YamlEditor:
 
     def __init__(self, path, log_name="yaml_editor"):
         self.path = Path(path)
-        self.rel_dir = os.environ.get("REL_DIR", "")
+        self.rel_dir = os.environ.get("LLM_DIR", "")
         self.log = get_logger(log_name)
         self.ydict = self.open_yaml()
 
@@ -74,17 +74,21 @@ class YamlEditor:
 
 class Checkpoint(YamlEditor):
 
-    def __init__(self, checkpoint_path=None):
-        if not checkpoint_path:
-            checkpoint_path = "/tmp/llm/checkpoint.yaml"
+    def __init__(self, checkpoint_dir=None):
+        self.pdir = Path(checkpoint_dir) if checkpoint_dir else Path("/tmp/llm")
+        checkpoint_path = Path(self.pdir / "checkpoint").with_suffix(".yaml")
         YamlEditor.__init__(self, checkpoint_path, "chkpnt")
 
+    def remove(self):
+        for path in self.pdir.iterdir():
+            Path(path).unlink()
+        self.pdir.rmdir()
 
 if __name__ == "__main__":
 
     args = initialise()
 
-    checkpoint = Checkpoint(args.checkpoint_path)
+    checkpoint = Checkpoint(args.checkpoint_dir)
     #checkpoint.update_key("model", "ft_id::11000")
     #checkpoint.update_key("batch_fileid", "file-CbbeK4fUbWSMfImX3jNNQWrt")
     checkpoint.remove_key("batch_batchid")

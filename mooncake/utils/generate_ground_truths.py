@@ -19,7 +19,6 @@ def load_data(fname):
 
     return df
 
-
 if __name__ == "__main__":
 
     # load 10ks and stock data
@@ -28,19 +27,30 @@ if __name__ == "__main__":
     # determine ground truth as 10 day avg after 10ks
     # if higher, buy, else low
 
-    fname_out = "mooncake/data/10ks/10ks_truths.csv"
+    fname_10ks_out = "mooncake/data/10ks/10ks_truths.csv"
+    fname_sp500_out = "mooncake/data/sp500list/sp500list_10ks.csv"
+    window_size = 10
+
     df_10ks = load_data("mooncake/data/10ks/df_10ks.csv")
+    df_10ks = df_10ks.replace(r'\n', '', regex=True)
+
     df_sp500 = load_data("mooncake/data/sp500list/sp500list.csv")
     df_sp500 = df_sp500.dropna(subset=["prc"])
-    window_size = 10
 
     # calculate rolling window for sp500 for each group of ticker
     # then calculate truth based on current price and window price
     df_sp500.loc[:,"prc_rolling"] = df_sp500.loc[:,:].groupby("ticker")["prc"].rolling(window_size).mean().reset_index(0, drop=True)
     df_sp500.loc[:,"truth"] = np.where(df_sp500.loc[:,"prc"] <= df_sp500.loc[:,"prc_rolling"], "buy", "sell")
+    # merge 10ks <- sp500
     df = pd.merge(df_10ks, df_sp500, on=["date", "ticker"], how="left")
     # TODO, appears some truths are NA? investigate cause; perhaps merge is within rolling window?
     df = df.dropna(subset=["truth"])
     # subset columns?
 
-    df.to_csv(fname_out, index=False)
+    df.to_csv(fname_10ks_out, sep="|", index=False)
+
+    # merge sp500 <- 10ks
+    # TODO  df.shape > df_sp500.shape, how??
+    df = pd.merge(df_sp500, df_10ks, on=["date", "ticker"], how="left")
+    df.to_csv(fname_sp500_out, sep="|", index=False)
+    

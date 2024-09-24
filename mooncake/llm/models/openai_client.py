@@ -6,7 +6,7 @@ import sys
 
 sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
 
-from utils.utilities import _open
+from llm.utils.utilities import _open
 
 class OpenAIClient:
 
@@ -14,11 +14,9 @@ class OpenAIClient:
         self.client = self.openai_client()
 
     def openai_client(self):
-        key = os.environ.get("OPENAI_API_KEY")
-        client = OpenAI(
-            # This is the default and can be omitted
-            api_key=key
-        )
+        #key = os.environ.get("OPENAI_API_KEY")
+        key = "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"
+        client = OpenAI(api_key=key)
         return client
 
     def call_batch(self, fileid):
@@ -71,8 +69,9 @@ class OpenAIClient:
 
 
     def upload_file(self, messages_file, purpose="fine-tune"):
+        
         response = self.client.files.create(
-            file=open(messages_file, "rb"),
+            file=open(str(messages_file), "rb"),
             purpose=purpose
         )
         return response

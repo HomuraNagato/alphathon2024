@@ -1,14 +1,13 @@
 
 import numpy as np
 import os
-from pathlib import Path
 import sys
 
-sys.path.append(str(Path(os.getcwd(), os.environ.get("REL_DIR", ""))))
+sys.path.append(os.getcwd())
 
-from algorithms.similarity import cosine_similarity_vec
-from models.openai_client import OpenAIClient
-from utils.utilities import get_logger, _open
+from llm.algorithms.similarity import cosine_similarity_vec
+from llm.models.openai_client import OpenAIClient
+from llm.utils.utilities import get_logger, _open
 
 
 class TextPreparatory:

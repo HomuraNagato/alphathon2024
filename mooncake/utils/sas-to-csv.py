@@ -16,11 +16,16 @@ def read_sas_pandas(fname):
 
 if __name__ == "__main__":
 
-    input_file = './mooncake/sp500list/sp500list.sas7bdat'  # Replace with your actual .sas7bdat file
-    output_file = './mooncake/sp500list/sp500list.csv'  # Replace with your desired CSV filename
+    input_file = './mooncake/data/sp500s/sp500cik.sas7bdat'
+    output_file = './mooncake/data/sp500s/sp500cik.csv'
 
     #df = read_sas_pyreadstat(input_file)
     df = read_sas_pandas(input_file)
+
+    # quick data clean to transform b'{cell}' -> {cell}
+    for col, dtype in df.dtypes.items():
+        if dtype == object:
+            df[col] = df[col].str.decode("utf-8")
 
     # Write the DataFrame to a CSV file
     df.to_csv(output_file, index=False)
