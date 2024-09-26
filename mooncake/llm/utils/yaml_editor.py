@@ -47,6 +47,9 @@ class YamlEditor:
     def chmod(self, val):
         os.chmod(self.path, val)
 
+    def get(self, key, default=None):
+        return self.ydict.get(key, default)
+
     def open_yaml(self):
         if not self.path.exists():
             create_path(self.path)

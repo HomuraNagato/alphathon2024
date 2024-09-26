@@ -1,7 +1,8 @@
 
 from datetime import datetime, timedelta
-import logging
+import hashlib
 import json
+import logging
 import pandas as pd
 import pathlib
 import re
@@ -85,6 +86,17 @@ def get_logger(logname=__name__, loglevel=logging.INFO, verbose=None):
     handlers = [logging.StreamHandler(sys.stdout)]
     logging.basicConfig(format=format, level=loglevel, datefmt=datefmt, handlers=handlers)
     return logging.getLogger(logname)
+
+def hash_text(*texts):
+
+    text = " ".join(texts)
+    hash_object = hashlib.sha256()
+    # Update the hash object with the text
+    hash_object.update(text.encode())
+    # Get the hexadecimal representation of the hash
+    hashed_text = hash_object.hexdigest()
+
+    return hashed_text
 
 def inspect_df(df, description="", log=None, cols=None, idx_start=0, idx_end=5):
     """
