@@ -78,3 +78,14 @@ sp500_df = sp500_df.merge(new_portfolio_weights, how="left", on="ticker")
 sp500_df = sp500_df.fillna(0)
 sp500_df
 
+
+# some stuff to get rebalancing working in QuantConnect
+df_rebalance = df.copy()
+df_rebalance.sort_values(["ticker", "date"]).groupby("ticker").tail(1)
+
+my_set = set()
+my_set.add("a")
+my_set.add("b")
+my_set.add("c")
+my_set.remove(str("c"))
+my_set
