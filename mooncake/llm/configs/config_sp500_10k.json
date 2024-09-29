@@ -1,0 +1,28 @@
+{
+  "client": "sp500_10k_demo",
+  "prompt_template": "Classify the term '{}' into one of these categories: {}; only give name of the class",
+  "system_msgs": {
+    "classification": "Ensure that the generated output aligns with one of the predefined categories provided. Avoid generating content that does not belong to any of these specified categories."
+  },
+  "column_map": {
+    "item_1": "item_1",
+    "item_1a": "item_1a",
+    "item_7a": "item_7a",
+    "truth": "true_category"
+  },
+  "categories": [],
+  "model_v000": {
+    "max_tokens": 100,
+    "model_type": "gpt-4o-mini-2024-07-18",
+    "temperature": 0.7,
+    "top_p": 1
+  },
+  "model_v001": {
+    "data_path": None,
+    "date": "2024-09-26",
+    "max_tokens": 100,
+    "model_type": "gpt-4o-mini-2024-07-18",
+    "temperature": 0.7,
+    "top_p": 1
+  }
+}
