@@ -3,7 +3,7 @@ from io import StringIO
 
 # Read the entire text file
 # Note: Have to go in and delete the '2011-12-30 16:00:00 ' part from the start of the line for it to read correctly
-with open('data/output/qc_logs_1.txt', 'r') as file:
+with open('data/output/upgraded_apricot_whale_logs.txt', 'r') as file:
     lines = file.readlines()
 
 # Find the line where "Portfolio weights df is:" appears
