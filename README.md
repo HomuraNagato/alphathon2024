@@ -87,6 +87,14 @@ Despite these potential improvements, our simple strategy outperforms the S&P 50
 
 ## Appendix
 
+Figure 1 In-Sample Results
+
+![Portfolio returns: in-sample](images/portfolio-returns-is.png)
+
+Figure 2 Out-of-Sample Results
+
+![Portfolio returns: out-of-sample](images/portfolio-returns-oos.png)
+
 ## Supporting Links to the Report
 
 In-Sample Results
