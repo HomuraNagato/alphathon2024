@@ -23,20 +23,20 @@ class MessageEngine:
         self.config = config
         self.text_preparatory = TextPreparatory()
 
-    def prep_df(self, data_path):
+    def prep_df(self, data_path: str):
         # load data, filter to columns with content as input to prompts
         df = pd.read_csv(data_path)
         df = df.dropna(axis=1, how="all")
         df = df.fillna("")
         return df
 
-    def sample(self, df, sample_size):
+    def sample(self, df, sample_size: int):
         if 0 < sample_size < df.shape[0]:
             sample_idx = df.sample(n=sample_size).index
             df = df.loc[sample_idx,:]
         return df
 
-    def solicitation_destem(self, df):
+    def solicitation_destem(self, df: pd.DataFrame):
         # few steps to prep df -> list of strings for request batch
 
         tmp_destem_req = Path(self.checkpoint.pdir / "destem_request.jsonl")
@@ -64,7 +64,7 @@ class MessageEngine:
 
         return s03
 
-    def save_messages(self, message_path, messages):
+    def save_messages(self, message_path: str, messages: list):
 
         create_path(message_path)
         f = open(message_path, "w")
@@ -90,7 +90,7 @@ class MessageEngine:
 
         return df
 
-    def verify_checkpoint(self, fpath):
+    def verify_checkpoint(self, fpath: str):
         #res = self.checkpoint_dir and Path(self.checkpoint_dir).exists() and Path(fpath).exists()
         res = Path(fpath).exists()
         if res:
@@ -103,7 +103,7 @@ class MessageTrainEngine(MessageEngine):
     def __init__(self, config, checkpoint: Checkpoint=None):
         MessageEngine.__init__(self, config, checkpoint)
 
-    def prep_train(self, df, message_path):
+    def prep_train(self, df: pd.DataFrame, message_path: str):
         
         if self.verify_checkpoint(message_path):
             return
@@ -147,7 +147,7 @@ class MessageTestEngine(MessageEngine):
         self.path_cls_req = Path(self.checkpoint.pdir / "cls_request.jsonl")
         self.path_cls_res = Path(self.checkpoint.pdir / "cls_response.jsonl")
 
-    def solicitation_test(self, df, model_key, sample_size=0):
+    def solicitation_test(self, df: pd.DataFrame, model_key: str, sample_size: int=0):
         # messages without true category
         # note, message_json's for chat completion are different than fine-tuning
 
