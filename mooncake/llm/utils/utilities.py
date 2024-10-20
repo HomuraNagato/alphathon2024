@@ -311,6 +311,7 @@ def find_max_keyword_sequence(keyword_counts: list, sequence_length: int = 2):
 Wrapper for cleaning text
 """
 def clean_text(item: str, keywords: list, sequence_length: int = 2):
+    item = normalize_text(item) 
     text_list = clean_and_split_text(item)
     text_counts = count_keywords(text_list, keywords)
     start_index = find_max_keyword_sequence(text_counts, sequence_length)
@@ -319,3 +320,24 @@ def clean_text(item: str, keywords: list, sequence_length: int = 2):
     item_cleaned = re.sub(r's \n\n', '', item_cleaned)
     item_cleaned = re.sub(r'\n\nTa', '', item_cleaned)
     return item_cleaned
+
+def normalize_text(text: str):
+    # Convert text to lowercase
+    text = text.lower()
+    # Remove any punctuation and excess spaces
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+def extract_dates(text: str):
+    # Regular expression for common date formats (e.g., YYYY-MM-DD, MM/DD/YYYY, etc.)
+    date_patterns = [
+        r'\b\d{4}-\d{2}-\d{2}\b',  # YYYY-MM-DD
+        r'\b\d{2}/\d{2}/\d{4}\b',  # MM/DD/YYYY
+        r'\b\d{4}\b'               # Just year
+    ]
+    dates = []
+    for pattern in date_patterns:
+        matches = re.findall(pattern, text)
+        dates.extend(matches)
+    return dates
