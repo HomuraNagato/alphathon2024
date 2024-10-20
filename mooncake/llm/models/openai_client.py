@@ -14,12 +14,11 @@ class OpenAIClient:
         self.client = self.openai_client()
 
     def openai_client(self):
-        #key = os.environ.get("OPENAI_API_KEY")
-        key = "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"
+        key = os.environ.get("OPENAI_API_KEY")
         client = OpenAI(api_key=key)
         return client
 
-    def call_batch(self, fileid):
+    def call_batch(self, fileid: str):
         response = self.client.batches.create(
             input_file_id=fileid,
             endpoint="/v1/chat/completions",
@@ -67,7 +66,6 @@ class OpenAIClient:
                 break
             print(res)
 
-
     def upload_file(self, messages_file, purpose="fine-tune"):
         
         response = self.client.files.create(
@@ -75,4 +73,31 @@ class OpenAIClient:
             purpose=purpose
         )
         return response
-    
+
+    def delete_file(self, file_id: str):
+        response = self.client.files.delete(file_id=file_id)
+        return response
+
+    def get_file_details(self, file_id: str):
+        response = self.client.files.retrieve(file_id=file_id)
+        return response
+
+    def get_fine_tuning_details(self, job_id: str):
+        response = self.client.fine_tuning.jobs.retrieve(id=job_id)
+        return response
+
+    def cancel_fine_tuning(self, job_id: str):
+        response = self.client.fine_tuning.jobs.cancel(id=job_id)
+        return response
+
+    def call_completion(self, prompt: str, model="gpt-3.5-turbo", max_tokens=100):
+        response = self.client.completions.create(
+            model=model,
+            prompt=prompt,
+            max_tokens=max_tokens
+        )
+        return response
+
+    def get_batch_status(self, batch_id: str):
+        response = self.client.batches.retrieve(id=batch_id)
+        return response
